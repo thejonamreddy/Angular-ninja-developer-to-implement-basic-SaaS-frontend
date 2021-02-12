@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { AppService } from '../app.service';
 import { Country } from '../models/country';
+import { User } from '../models/user';
 import { UserUpdate } from '../models/user-update';
 
 export interface DialogData {
@@ -47,8 +48,8 @@ export class UserUpdateDialogComponent implements OnInit {
         this.error = '';
         const user: UserUpdate = this.userForm.value;
         const obs = this.data.isCreate ? this.appService.createUser(user) : this.appService.updateUser(user);
-        obs.subscribe(() => {
-            this.dialogRef.close();
+        obs.subscribe((user: User) => {
+            this.dialogRef.close(user);
         }, (httpError: HttpErrorResponse) => {
             this.error = httpError.error.Detail;
         });

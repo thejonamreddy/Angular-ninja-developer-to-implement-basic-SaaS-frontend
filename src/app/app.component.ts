@@ -34,8 +34,10 @@ export class AppComponent implements OnInit {
         countryList: this.countryList
       }
     });
-    dialogRef.afterClosed().subscribe(() => {
-      this.loadUsers();
+    dialogRef.afterClosed().subscribe((user: User) => {
+      this.userList.push(user);
+      /* To trigger dataSource change */
+      this.userList = [...this.userList];
     });
   }
 
@@ -49,8 +51,11 @@ export class AppComponent implements OnInit {
           countryList: this.countryList
         }
       });
-      dialogRef.afterClosed().subscribe(() => {
-        this.loadUsers();
+      dialogRef.afterClosed().subscribe((user: User) => {
+        const index = this.userList.findIndex(u => u.id === user.id);
+        this.userList[index] = user;
+        /* To trigger dataSource change */
+        this.userList = [...this.userList]; 
       });
     });
   }

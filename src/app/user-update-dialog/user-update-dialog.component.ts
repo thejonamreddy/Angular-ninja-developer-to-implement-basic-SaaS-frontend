@@ -1,16 +1,14 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { AppService } from '../app.service';
-import { Country } from '../models/country';
-import { User } from '../models/user';
-import { UserUpdate } from '../models/user-update';
+import { Country } from '../core/models/country';
+import { User } from '../core/models/user';
+import { UserUpdate } from '../core/models/user-update';
+import { UserUpdateDialogSandbox } from './user-update-dialog.sandbox';
 
 export interface DialogData {
-    userUpdate: UserUpdate,
-    isCreate: boolean,
-    countryList: Country[]
+    user: User;
+    isCreate: boolean;
 }
 
 @Component({
@@ -19,40 +17,51 @@ export interface DialogData {
 })
 export class UserUpdateDialogComponent implements OnInit {
 
-    error: string = '';
-    userForm: FormGroup;
-
-    get userUpdate(): UserUpdate {
-        return (this.data && this.data.userUpdate) || { id: 0, name: null, countries: [] };
-    }
+    userForm!: FormGroup;
+    countryList!: Country[];
+    error!: any;
 
     get mode(): string {
-        return (this.data && this.data.isCreate) ? 'Create' : 'Update';
+        return (this.data && this.data.isCreate) ? 'Create' : 'Edit';
     }
 
-    get countryList(): Country[] {
-        return (this.data && this.data.countryList) || [];
+    constructor(
+        public dialogRef: MatDialogRef<UserUpdateDialogComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: DialogData,
+        private formBuilder: FormBuilder,
+        private userUpdateDialogSandbox: UserUpdateDialogSandbox) {
+            this.userUpdateDialogSandbox.countries$.subscribe(data => this.countryList = data);
+            this.initUserForm(new UserUpdate(0, '', []));
     }
 
-    constructor(public dialogRef: MatDialogRef<UserUpdateDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: DialogData, private formBuilder: FormBuilder, private appService: AppService) {
+    ngOnInit(): void {
+        this.userUpdateDialogSandbox.fetchAllCountries();
+        if (!this.data.isCreate) {
+            this.userUpdateDialogSandbox.user$.subscribe(user => {
+                if (user) {
+                    this.initUserForm(<UserUpdate>user);
+                }
+            });
+            this.userUpdateDialogSandbox.getUser(this.data.user.id);
+        }
+    }
+
+    initUserForm(user: UserUpdate) {
         this.userForm = this.formBuilder.group({
-            id: [this.userUpdate.id],
-            name: [this.userUpdate.name, [Validators.required]],
-            countries: [this.userUpdate.countries]
+            id: [user.id],
+            name: [user.name, [Validators.required]],
+            countries: [user.countries]
         });
     }
-
-    ngOnInit(): void { }
 
     submit(): void {
-        this.error = '';
         const user: UserUpdate = this.userForm.value;
-        const obs = this.data.isCreate ? this.appService.createUser(user) : this.appService.updateUser(user);
-        obs.subscribe((user: User) => {
-            this.dialogRef.close(user);
-        }, (httpError: HttpErrorResponse) => {
-            this.error = httpError.error.Detail;
-        });
+        if (this.data.isCreate) {
+            this.userUpdateDialogSandbox.createUser(user);
+        } else {
+            this.userUpdateDialogSandbox.updateUser(user);
+        }
+        this.dialogRef.close();
     }
 
 }

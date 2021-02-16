@@ -5,7 +5,7 @@ import { getAllCountriesAction } from "../core/store/actions/countries.actions";
 import { createUserAction } from "../core/store/actions/create-user.actions";
 import { updateUserAction } from "../core/store/actions/update-user.actions";
 import { getUserAction } from "../core/store/actions/user.actions";
-import { AppState } from "../core/store/app.state";
+import { AppState, getCreateUserState, getUpdateUserState } from "../core/store/app.state";
 import { getCountries } from "../core/store/selectors/countries.selectors";
 import { getUser } from "../core/store/selectors/user.selectors";
 
@@ -14,6 +14,8 @@ export class UserUpdateDialogSandbox {
 
     countries$ = this.store.select(getCountries);
     user$ = this.store.select(getUser);
+    createUserState$ = this.store.select(getCreateUserState);
+    updateUserState$ = this.store.select(getUpdateUserState);
 
     constructor(
         private store: Store<AppState>

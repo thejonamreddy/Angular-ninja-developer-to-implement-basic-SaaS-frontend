@@ -30,8 +30,8 @@ export class UserUpdateDialogComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public data: DialogData,
         private formBuilder: FormBuilder,
         private userUpdateDialogSandbox: UserUpdateDialogSandbox) {
-            this.userUpdateDialogSandbox.countries$.subscribe(data => this.countryList = data);
-            this.initUserForm(new UserUpdate(0, '', []));
+        this.userUpdateDialogSandbox.countries$.subscribe(data => this.countryList = data);
+        this.initUserForm(new UserUpdate(0, '', []));
     }
 
     ngOnInit(): void {
@@ -55,13 +55,31 @@ export class UserUpdateDialogComponent implements OnInit {
     }
 
     submit(): void {
+        this.error = '';
         const user: UserUpdate = this.userForm.value;
         if (this.data.isCreate) {
+            this.userUpdateDialogSandbox.createUserState$.subscribe(state => {
+                if (!state.loading) {
+                    if (state.error) {
+                        this.error = state.error.error.Detail;
+                    } else if (state.entity) {
+                        this.dialogRef.close();
+                    }
+                }
+            });
             this.userUpdateDialogSandbox.createUser(user);
         } else {
+            this.userUpdateDialogSandbox.updateUserState$.subscribe(state => {
+                if (!state.loading) {
+                    if (state.error) {
+                        this.error = state.error.error.Detail;
+                    } else if (state.entity) {
+                        this.dialogRef.close();
+                    }
+                }
+            });
             this.userUpdateDialogSandbox.updateUser(user);
         }
-        this.dialogRef.close();
     }
 
 }

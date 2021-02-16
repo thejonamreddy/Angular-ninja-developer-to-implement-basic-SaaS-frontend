@@ -1,20 +1,26 @@
 import { Injectable } from "@angular/core";
-import { select, Store } from "@ngrx/store";
-import { getAllUsersAction } from "./core/store/actions/users.actions";
-import { AppState } from "./core/store/app.state";
-import { getUsers } from "./core/store/selectors/users.selector";
-
+import { of } from "rxjs";
+import { AppService } from "./app.service";
+import { User } from "./core/models/user";
 @Injectable()
 export class AppSandbox {
 
-    users$ = this.store.pipe(select(getUsers));
-
     constructor(
-        private store: Store<AppState>
+        private appService: AppService
     ) { }
 
     fetchAllUsers() {
-        this.store.dispatch(getAllUsersAction());
+        return this.appService.getAllUsers();
+    }
+
+    onCreateUser(users: User[], user: User) {
+        return of([...users, user]);
+    }
+
+    onUpdateUser(users: User[], user: User) {
+        var index = users.findIndex(u => u.id === user.id);
+        users[index] = user;
+        return of([...users]);
     }
 
 }

@@ -30,19 +30,15 @@ export class UserUpdateDialogComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public data: DialogData,
         private formBuilder: FormBuilder,
         private userUpdateDialogSandbox: UserUpdateDialogSandbox) {
-        this.userUpdateDialogSandbox.countries$.subscribe(data => this.countryList = data);
         this.initUserForm(new UserUpdate(0, '', []));
     }
 
     ngOnInit(): void {
-        this.userUpdateDialogSandbox.fetchAllCountries();
+        this.userUpdateDialogSandbox.fetAllCountries().subscribe(data => this.countryList = data);
         if (!this.data.isCreate) {
-            this.userUpdateDialogSandbox.user$.subscribe(user => {
-                if (user) {
-                    this.initUserForm(<UserUpdate>user);
-                }
+            this.userUpdateDialogSandbox.fetchUser(this.data.user).subscribe(user => {
+                this.initUserForm(<UserUpdate>user);
             });
-            this.userUpdateDialogSandbox.getUser(this.data.user.id);
         }
     }
 
@@ -57,29 +53,11 @@ export class UserUpdateDialogComponent implements OnInit {
     submit(): void {
         this.error = '';
         const user: UserUpdate = this.userForm.value;
-        if (this.data.isCreate) {
-            this.userUpdateDialogSandbox.createUserState$.subscribe(state => {
-                if (!state.loading) {
-                    if (state.error) {
-                        this.error = state.error.error.Detail;
-                    } else if (state.entity) {
-                        this.dialogRef.close();
-                    }
-                }
-            });
-            this.userUpdateDialogSandbox.createUser(user);
-        } else {
-            this.userUpdateDialogSandbox.updateUserState$.subscribe(state => {
-                if (!state.loading) {
-                    if (state.error) {
-                        this.error = state.error.error.Detail;
-                    } else if (state.entity) {
-                        this.dialogRef.close();
-                    }
-                }
-            });
-            this.userUpdateDialogSandbox.updateUser(user);
-        }
+        var promise = this.data.isCreate ? this.userUpdateDialogSandbox.createUser(user) : this.userUpdateDialogSandbox.updateUser(user);
+        promise.subscribe(
+            data => this.dialogRef.close(data),
+            error => this.error = error.error.Detail
+        );
     }
-
+    
 }
